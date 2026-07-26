@@ -130,9 +130,11 @@ def seed_default_data():
 
         db.commit()
     except Exception as e:
-        print(f"Error during data seeding: {e}")
+        db.rollback()
+        print(f"Data seeding skipped or handled by peer worker: {e}")
     finally:
         db.close()
+
 
 @app.get("/")
 def root():
