@@ -9,11 +9,13 @@ if settings.DATABASE_URL.startswith("sqlite"):
 else:
     engine = create_engine(
         settings.DATABASE_URL,
+        connect_args={"sslmode": "prefer"},
         pool_pre_ping=True,
         pool_recycle=300,
         pool_size=10,
         max_overflow=20
     )
+
 
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

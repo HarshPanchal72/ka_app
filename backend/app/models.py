@@ -5,7 +5,8 @@ from app.database import Base
 class UserModel(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_order=True, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
+
     username = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
     role = Column(String, default="User")  # User, Manager, Acc
