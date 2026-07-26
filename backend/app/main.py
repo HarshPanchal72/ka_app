@@ -92,6 +92,37 @@ def seed_default_data():
             )
             db.add(admin)
 
+        if not db.query(UserModel).filter(UserModel.username == "ict1").first():
+            ict1 = UserModel(
+                username="ict1",
+                password_hash=get_password_hash("ict1pass"),
+                role="User",
+                email="ict1@kataria.co.in",
+                mobile="9876543213",
+                company="KAPL",
+                branch="Ahmedabad-Makarba",
+                city="Ahmedabad",
+                department="ICT",
+                designation="ICT Executive"
+            )
+            db.add(ict1)
+
+        if not db.query(UserModel).filter(UserModel.username == "ict2").first():
+            ict2 = UserModel(
+                username="ict2",
+                password_hash=get_password_hash("ict2pass"),
+                role="User",
+                email="ict2@kataria.co.in",
+                mobile="9876543214",
+                company="KAPL",
+                branch="Ahmedabad-Makarba",
+                city="Ahmedabad",
+                department="ICT",
+                designation="ICT Senior Executive"
+            )
+            db.add(ict2)
+
+
         # Seed sample initial queries if empty
         if db.query(QueryModel).count() == 0:
             sample_query1 = QueryModel(
