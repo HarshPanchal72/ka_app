@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: ka-app-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DATABASE_URL
+        value: postgresql://flutter_db_gnje_user:u78MtRZFQZS6WBZckXmETjsPka8QCbtZ@dpg-d9i9j558nd3s739h8it0-a/flutter_db_gnje
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: 3.11.5
