@@ -7,14 +7,21 @@ if settings.DATABASE_URL.startswith("sqlite"):
         settings.DATABASE_URL, connect_args={"check_same_thread": False}
     )
 else:
+    connect_args = {}
+    if "dpg-" in settings.DATABASE_URL and ".render.com" not in settings.DATABASE_URL:
+        connect_args["sslmode"] = "disable"
+    elif "render.com" in settings.DATABASE_URL:
+        connect_args["sslmode"] = "require"
+
     engine = create_engine(
         settings.DATABASE_URL,
-        connect_args={"sslmode": "prefer"},
+        connect_args=connect_args,
         pool_pre_ping=True,
         pool_recycle=300,
         pool_size=10,
         max_overflow=20
     )
+
 
 
 
