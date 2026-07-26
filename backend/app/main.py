@@ -45,8 +45,7 @@ def seed_default_data():
     """Seed initial sample data and accounts if DB is fresh"""
     db = SessionLocal()
     try:
-        # Seed default demo users if missing
-        if not db.query(UserModel).filter(UserModel.username == "emilys").first():
+        if db.query(UserModel).count() == 0:
             user = UserModel(
                 username="emilys",
                 password_hash=get_password_hash("emilyspass"),
@@ -60,9 +59,6 @@ def seed_default_data():
                 designation="HR Executive",
                 reporting_manager="Bhupendra Sir"
             )
-            db.add(user)
-
-        if not db.query(UserModel).filter(UserModel.username == "manager").first():
             manager = UserModel(
                 username="manager",
                 password_hash=get_password_hash("manager123"),
@@ -75,9 +71,6 @@ def seed_default_data():
                 department="ERP",
                 designation="Manager ERP"
             )
-            db.add(manager)
-
-        if not db.query(UserModel).filter(UserModel.username == "admin").first():
             admin = UserModel(
                 username="admin",
                 password_hash=get_password_hash("admin123"),
@@ -90,9 +83,6 @@ def seed_default_data():
                 department="Accounts",
                 designation="Account Manager"
             )
-            db.add(admin)
-
-        if not db.query(UserModel).filter(UserModel.username == "ict1").first():
             ict1 = UserModel(
                 username="ict1",
                 password_hash=get_password_hash("ict1pass"),
@@ -105,9 +95,6 @@ def seed_default_data():
                 department="ICT",
                 designation="ICT Executive"
             )
-            db.add(ict1)
-
-        if not db.query(UserModel).filter(UserModel.username == "ict2").first():
             ict2 = UserModel(
                 username="ict2",
                 password_hash=get_password_hash("ict2pass"),
@@ -120,10 +107,8 @@ def seed_default_data():
                 department="ICT",
                 designation="ICT Senior Executive"
             )
-            db.add(ict2)
+            db.add_all([user, manager, admin, ict1, ict2])
 
-
-        # Seed sample initial queries if empty
         if db.query(QueryModel).count() == 0:
             sample_query1 = QueryModel(
                 user_id="1",
@@ -165,6 +150,7 @@ def seed_default_data():
         print(f"Data seeding skipped or handled by peer worker: {e}")
     finally:
         db.close()
+
 
 
 @app.get("/")
