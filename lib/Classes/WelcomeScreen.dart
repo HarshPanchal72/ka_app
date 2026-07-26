@@ -288,8 +288,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
     final TextEditingController userNameController = TextEditingController();
     final TextEditingController passwordController = TextEditingController();
 
-    userNameController.text = 'emilys';
-    passwordController.text = 'emilyspass';
 
     double screenWidth = MediaQuery.of(context).size.width;
     final ValueNotifier<bool> isPswdHidden = ValueNotifier<bool>(false);

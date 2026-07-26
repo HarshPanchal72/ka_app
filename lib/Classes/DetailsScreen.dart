@@ -470,76 +470,50 @@ class DetailsScreenState extends State<DetailsScreen> {
 
   Future<void> callSubmit() async {
     try {
+      CommonClass.showLoader(context);
       final api = ApiService();
 
       var response = await api.postApi(
-        endpoint: ApiConstants.submit,
+        endpoint: ApiConstants.submit + "/json",
         param: {
-            "username": "Komal",
-            "mobile": "9876543210",
-            "company": "ABC",
-            "branch": "Surat",
-            "department": "HR"
-
-            // "mobile": widget.loginData.mobile,
-          // "userName": widget.loginData.userName,
-          // "city": widget.loginData.city,
-          // "branch": widget.loginData.branch,
-          // "email": widget.loginData.email,
-          // "orange_id": widget.loginData.orange_id,
-          // "department": widget.loginData.department,
-          // "designation": selectDepartment,
-          // "company": widget.loginData.company,
-          // "reporting_manager": widget.loginData.reporting_man,
-          // "date": currentDate,
-          // "location": isSame,
-          // "subDepartment": selectSubDepartment,
-          // "engineer_name": selectEngName,
-          // "query": selectQuestions,
-          // "remark": remarksController.text,
-          /// "file": '',
+          "user_id": widget.loginData.userId,
+          "sent_date": currentDate.isNotEmpty ? currentDate : DateFormat('dd/MM/yyyy').format(DateTime.now()),
+          "user_name": widget.loginData.userName,
+          "mobile_no": widget.loginData.mobile,
+          "email": emailController.text.isNotEmpty ? emailController.text : widget.loginData.email,
+          "branch": widget.loginData.branch,
+          "department": (isSame.value) ? widget.loginData.department : (selectDepartment.value ?? widget.loginData.department),
+          "sub_department": selectSubDepartment.value ?? '',
+          "city": widget.loginData.city,
+          "company": widget.loginData.company,
+          "reporting_manager": widget.loginData.reporting_man,
+          "engineer_name": selectEngName.value ?? '',
+          "query_text": selectQuery.value ?? '',
+          "remarks": remarksController.text,
+          "status": "Pending",
+          "w_type": "",
         },
-
-        // param: {
-        //   "mobile": widget.loginData['mobile'],
-        //   "userName": widget.loginData['userName'],
-        //   "city": widget.loginData['city'],
-        //   "branch": widget.loginData['branch'],
-        //   "email": emailController.text,
-        //   "orange_id": widget.loginData['orange_id'],
-        //   "department": selectDepartment,
-        //   "designation": selectDepartment,
-        //   "company": widget.loginData['company'],
-        //   "reporting_manager": widget.loginData['reporting_man'],
-        //   "date": currentDate,
-        //   "location": isSame,
-        //   "subDepartment": selectSubDepartment,
-        //   "engineer_name": selectEngName,
-        //   "query": selectQuestions,
-        //   "remark": remarksController.text,
-        //   "file": '',
-        // },
       );
 
-      CommonClass.showLoader(context);
+      CommonClass.hideLoader(context);
       print(response.statusCode);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         print('Success Response==>${response.data}');
 
         CommonClass.showSnackBar(context, message: "Submit Successfully", textColor: Colors.deepPurple);
-        CommonClass.hideLoader(context);
         Future.delayed(Duration(seconds: 2), () {
           CommonClass.navClass(context, WelcomeScreen());
         });
       }  else {
         CommonClass.showSnackBar(context, message: "Submit Failed");
-        CommonClass.hideLoader(context);
       }
     } catch (e) {
+      CommonClass.hideLoader(context);
       print("Error: $e");
     }
   }
+
 
   // Future<void> openWhatsApp1() async {
   //   var phoneNo = '';

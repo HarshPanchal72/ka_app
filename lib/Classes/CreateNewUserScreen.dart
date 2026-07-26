@@ -448,14 +448,11 @@ class CreateNewUserScreenState extends State<CreateNewUserScreen> {
                           onPressed: () {
                             if (formKey.currentState!.validate()) {
                               CommonClass.showLoader(context);
-                              CommonClass.showSnackBar(context, message: "Create User Successfully", textColor: Colors.deepPurple);
-                              Future.delayed(const Duration(seconds: 2), () {
-                                CommonClass.hideLoader(context);
-                                Navigator.pop(context);
-                              });
+                              callCreateUserApi();
                             }
                           }
                       ),
+
 
                       SizedBox(height: 10),
 
@@ -481,4 +478,43 @@ class CreateNewUserScreenState extends State<CreateNewUserScreen> {
       });
     }
   }
+
+  Future<void> callCreateUserApi() async {
+    try {
+      final api = ApiService();
+      final response = await api.postApi(
+        endpoint: ApiConstants.createUser + "/json",
+        param: {
+          "username": userNameController.text.trim(),
+          "password": passwordController.text.trim(),
+          "role": "User",
+          "mobile": mobNoController.text.trim(),
+          "email": emailController.text.trim(),
+          "company": orgController.text.trim(),
+          "branch": selectBranch.value ?? '',
+          "city": selectCity.value ?? '',
+          "department": selectDepartment.value ?? '',
+          "designation": selectDesignation.value ?? '',
+        },
+      );
+
+      CommonClass.hideLoader(context);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        CommonClass.showSnackBar(context, message: "User Created Successfully", textColor: Colors.deepPurple);
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pop(context);
+        });
+      } else {
+        String msg = response.data is Map && response.data['detail'] != null 
+            ? response.data['detail'] 
+            : "Failed to create user";
+        CommonClass.showSnackBar(context, message: msg, backgroundColor: Colors.red);
+      }
+    } catch (e) {
+      CommonClass.hideLoader(context);
+      CommonClass.showSnackBar(context, message: "Error connecting to backend", backgroundColor: Colors.red);
+      print("Create User Error: $e");
+    }
+  }
 }
+
