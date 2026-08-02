@@ -8,6 +8,7 @@ import 'package:ka_app/Classes/MyProfileScreen.dart';
 import 'package:ka_app/Classes/NewQueryScreen.dart';
 import 'package:ka_app/Classes/QueryListScreen.dart';
 import 'package:ka_app/Classes/WelcomeScreen.dart';
+import '../API Manager/APIConstants.dart';
 import '../Resources/AppText.dart';
 import '../Resources/SizeConfig.dart';
 import 'common_class.dart';
@@ -23,6 +24,7 @@ class _SideMenuState extends State<SideMenu> {
   String heading = "";
   String user = "";
   String screen = "";
+  String profilePicture = "";
 
   @override
   void initState() {
@@ -37,7 +39,9 @@ class _SideMenuState extends State<SideMenu> {
     setState(() {});
   }
   Future<void> loadUser() async {
-    user = await CommonClass().getUser();
+    Map<String, String> data = await CommonClass().getUserData();
+    user = data["username"] ?? "";
+    profilePicture = data["profile_picture"] ?? "";
     setState(() {});
   }
 
@@ -73,7 +77,12 @@ class _SideMenuState extends State<SideMenu> {
                 children: [
                    CircleAvatar(
                     radius: 35,
-                    backgroundImage: AssetImage("assets/images/profile.jpg"),
+                    backgroundColor: Colors.white24,
+                    backgroundImage: (profilePicture.isNotEmpty)
+                        ? NetworkImage(profilePicture.startsWith("http")
+                            ? profilePicture
+                            : "${ApiConstants.serverUrl}$profilePicture")
+                        : const AssetImage("assets/images/profile.jpg") as ImageProvider,
                   ),
                    SizedBox(height: 10),
                    AppText(

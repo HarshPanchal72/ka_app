@@ -52,6 +52,38 @@ class CommonClass {
     await prefs.setString("user", user);
   }
 
+  Future<void> setUserData(Map<String, dynamic> userMap) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("user", userMap["username"] ?? "");
+    await prefs.setString("user_email", userMap["email"] ?? "");
+    await prefs.setString("user_mobile", userMap["mobile"] ?? "");
+    await prefs.setString("user_company", userMap["company"] ?? "");
+    await prefs.setString("user_branch", userMap["branch"] ?? "");
+    await prefs.setString("user_city", userMap["city"] ?? "");
+    await prefs.setString("user_department", userMap["department"] ?? "");
+    await prefs.setString("user_designation", userMap["designation"] ?? "");
+    await prefs.setString("user_reporting_manager", userMap["reporting_manager"] ?? "");
+    await prefs.setString("user_profile_picture", userMap["profile_picture"] ?? "");
+    await prefs.setString("user_role", userMap["role"] ?? "");
+  }
+
+  Future<Map<String, String>> getUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    return {
+      "username": prefs.getString("user") ?? "",
+      "email": prefs.getString("user_email") ?? "",
+      "mobile": prefs.getString("user_mobile") ?? "",
+      "company": prefs.getString("user_company") ?? "",
+      "branch": prefs.getString("user_branch") ?? "",
+      "city": prefs.getString("user_city") ?? "",
+      "department": prefs.getString("user_department") ?? "",
+      "designation": prefs.getString("user_designation") ?? "",
+      "reporting_manager": prefs.getString("user_reporting_manager") ?? "",
+      "profile_picture": prefs.getString("user_profile_picture") ?? "",
+      "role": prefs.getString("user_role") ?? "",
+    };
+  }
+
   Future<String> getScreen() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString("screen") ?? "";

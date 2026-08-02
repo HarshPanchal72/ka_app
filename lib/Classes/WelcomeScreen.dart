@@ -331,11 +331,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                         child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          CommonClass().customTextField("$name Name", userNameController, isMandatory: true,
-                            prefixIcon: Icons.person, width: screenWidth,
+                          CommonClass().customTextField("Badge ID", userNameController, isMandatory: true,
+                            prefixIcon: Icons.badge, width: screenWidth,
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
-                                return "Please enter $name Name";
+                                return "Please enter Badge ID";
                               }
                               return null;
                             }, context: context),
@@ -374,7 +374,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                             onPressed: () {
                               if (formKey.currentState!.validate()) {
                                 CommonClass.showLoader(context);
-                                callAPILogin(userNameController.text, passwordController.text, name);
+                                callAPILogin(userNameController.text.trim(), passwordController.text.trim(), name);
                               }
                             },
                           ),
@@ -411,7 +411,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
         CommonClass().setHeading(heading);
         CommonClass().setUser(username);
 
-        Future.delayed(const Duration(seconds: 2), () {
+        if (response.data is Map && response.data['user'] != null) {
+          Map<String, dynamic> userMap = Map<String, dynamic>.from(response.data['user']);
+          await CommonClass().setUserData(userMap);
+        }
+
+        Future.delayed(const Duration(seconds: 1), () {
           CommonClass.showSnackBar(
               context, message: "$heading Login Successfully", textColor: Colors.deepPurple);
           Navigator.pop(context);
@@ -422,20 +427,25 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
         (heading == "User") ? CommonClass().setScreen("users") : CommonClass().setScreen("manager");
 
       } else {
-        Future.delayed(const Duration(seconds: 2), () {
-          CommonClass.hideLoader(context);
-          CommonClass.showSnackBar(
-            context,
-            message: "Login Failed",
-          );
-        });
+        CommonClass.hideLoader(context);
+        String errorMsg = response.data is Map && response.data['detail'] != null
+            ? response.data['detail']
+            : "Invalid Badge ID or Password";
+        CommonClass.showSnackBar(
+          context,
+          message: errorMsg,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+        );
       }
     } catch (e) {
       CommonClass.hideLoader(context);
 
       CommonClass.showSnackBar(
         context,
-        message: "Something went wrong",
+        message: "Invalid Badge ID or Password",
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
       );
 
       print("Error: $e");

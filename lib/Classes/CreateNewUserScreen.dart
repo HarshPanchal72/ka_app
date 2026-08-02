@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ka_app/Classes/SideMenu.dart';
@@ -482,20 +483,33 @@ class CreateNewUserScreenState extends State<CreateNewUserScreen> {
   Future<void> callCreateUserApi() async {
     try {
       final api = ApiService();
-      final response = await api.postApi(
-        endpoint: ApiConstants.createUser + "/json",
-        param: {
-          "username": userNameController.text.trim(),
-          "password": passwordController.text.trim(),
-          "role": "User",
-          "mobile": mobNoController.text.trim(),
-          "email": emailController.text.trim(),
-          "company": orgController.text.trim(),
-          "branch": selectBranch.value ?? '',
-          "city": selectCity.value ?? '',
-          "department": selectDepartment.value ?? '',
-          "designation": selectDesignation.value ?? '',
-        },
+
+      Map<String, dynamic> formMap = {
+        "username": userNameController.text.trim(),
+        "password": passwordController.text.trim(),
+        "role": "User",
+        "mobile": mobNoController.text.trim(),
+        "email": emailController.text.trim(),
+        "company": orgController.text.trim(),
+        "branch": selectBranch.value ?? '',
+        "city": selectCity.value ?? '',
+        "department": selectDepartment.value ?? '',
+        "designation": selectDesignation.value ?? '',
+      };
+
+      if (selectedImage != null) {
+        String fileName = selectedImage!.path.split('/').last;
+        formMap["file"] = await MultipartFile.fromFile(
+          selectedImage!.path,
+          filename: fileName,
+        );
+      }
+
+      FormData formData = FormData.fromMap(formMap);
+
+      final response = await api.postFormDataApi(
+        endpoint: ApiConstants.createUser,
+        formData: formData,
       );
 
       CommonClass.hideLoader(context);

@@ -1,7 +1,8 @@
 class ApiConstants {
 
   // Live Render server URL
-  static const String baseUrl = "https://ka-app-jd91.onrender.com/api/v1";
+  static const String serverUrl = "https://ka-app-jd91.onrender.com";
+  static const String baseUrl = "$serverUrl/api/v1";
 
 
   // Local development base URL (10.0.2.2 for Android Emulator, localhost for iOS/Web)
