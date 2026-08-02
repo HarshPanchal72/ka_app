@@ -3,6 +3,8 @@ import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:ka_app/Classes/SideMenu.dart';
 import 'package:ka_app/Resources/AppText.dart';
+import '../API Manager/APIConstants.dart';
+import '../API Manager/APIService.dart';
 import '../Resources/SizeConfig.dart';
 import 'common_class.dart';
 
@@ -122,16 +124,53 @@ class QueryListScreenState extends State<QueryListScreen> {
     fontHeading = SizeConfig.getFont(10);
     fontColumn = SizeConfig.getFont(08);
 
+    userQueries = allQueries.where((e) => e.userId == widget.userId).toList();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       CommonClass.showLoader(context);
+      fetchQueries();
     });
-      userQueries = allQueries.where((e) => e.userId == widget.userId).toList();
+  }
 
-      Future.delayed(const Duration(seconds: 3), () {
-        if (mounted) {
-          CommonClass.hideLoader(context);
+  Future<void> fetchQueries() async {
+    try {
+      final api = ApiService();
+      var response = await api.getApi(endpoint: ApiConstants.queries);
+      if (response.statusCode == 200 && response.data != null) {
+        List<dynamic> list = response.data;
+        List<Query> fetched = list.map((json) {
+          return Query(
+            userId: json["user_id"]?.toString() ?? "1",
+            sentDate: json["sent_date"]?.toString() ?? "",
+            engineerName: json["engineer_name"]?.toString() ?? "",
+            mobileNo: json["mobile_no"]?.toString() ?? "",
+            email: json["email"]?.toString() ?? "",
+            branch: json["branch"]?.toString() ?? "",
+            department: json["department"]?.toString() ?? "",
+            subDepartment: json["sub_department"]?.toString() ?? "",
+            query: json["query_text"]?.toString() ?? "",
+            remarks: json["remarks"]?.toString() ?? "",
+            imagePath: json["image_path"]?.toString() ?? "assets/images/attach_photo.png",
+            status: json["status"]?.toString() ?? "Pending",
+            city: json["city"]?.toString() ?? "",
+            wType: json["w_type"]?.toString() ?? "",
+          );
+        }).toList();
+
+        if (fetched.isNotEmpty) {
+          setState(() {
+            userQueries = fetched;
+            checkedList.value = List.generate(userQueries.length, (i) => userQueries[i].status == "Completed");
+          });
         }
-      });
+      }
+    } catch (e) {
+      print("Error fetching queries: $e");
+    } finally {
+      if (mounted) {
+        CommonClass.hideLoader(context);
+      }
+    }
   }
 
   @override
@@ -561,23 +600,41 @@ void showPhotoDialog(BuildContext context, String imagePath) {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: ExtendedImage.asset(
-                imagePath,
-                mode: ExtendedImageMode.gesture,
-                fit: BoxFit.contain,
-                initGestureConfigHandler: (state) => GestureConfig(
-                  minScale: 1.0,
-                  maxScale: 5.0,
-                  animationMinScale: 0.8,
-                  animationMaxScale: 6.0,
-                  speed: 1.0,
-                  inertialSpeed: 100.0,
-                  initialScale: 1.0,
-                  inPageView: false,
-                  initialAlignment: InitialAlignment.center,
-                ),
-              )
-              //Image.asset(imagePath, fit: BoxFit.cover,),
+              child: (imagePath.startsWith("http") || imagePath.startsWith("/static/"))
+                  ? ExtendedImage.network(
+                      imagePath.startsWith("/static/")
+                          ? "${ApiConstants.serverUrl}$imagePath"
+                          : imagePath,
+                      mode: ExtendedImageMode.gesture,
+                      fit: BoxFit.contain,
+                      initGestureConfigHandler: (state) => GestureConfig(
+                        minScale: 1.0,
+                        maxScale: 5.0,
+                        animationMinScale: 0.8,
+                        animationMaxScale: 6.0,
+                        speed: 1.0,
+                        inertialSpeed: 100.0,
+                        initialScale: 1.0,
+                        inPageView: false,
+                        initialAlignment: InitialAlignment.center,
+                      ),
+                    )
+                  : ExtendedImage.asset(
+                      imagePath,
+                      mode: ExtendedImageMode.gesture,
+                      fit: BoxFit.contain,
+                      initGestureConfigHandler: (state) => GestureConfig(
+                        minScale: 1.0,
+                        maxScale: 5.0,
+                        animationMinScale: 0.8,
+                        animationMaxScale: 6.0,
+                        speed: 1.0,
+                        inertialSpeed: 100.0,
+                        initialScale: 1.0,
+                        inPageView: false,
+                        initialAlignment: InitialAlignment.center,
+                      ),
+                    ),
             ),
 
             Positioned(

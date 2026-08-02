@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -435,9 +436,7 @@ class DetailsScreenState extends State<DetailsScreen> {
                       width: screenWidth,
                       onPressed: () {
                        if (_formKey.currentState!.validate()) {
-                         print(selectEngName.value ?? "");
-                         CommonClass().setFName(selectEngName.value ?? "");
-                         CommonClass.navClass(context, QueryListScreen(userId: '1',));
+                         callSubmit();
                        }
                     },
                   ),
@@ -450,15 +449,6 @@ class DetailsScreenState extends State<DetailsScreen> {
       ),
     );
   }
-
-  // IconButton(
-  //   onPressed: openWhatsApp,
-  //   icon: Image.asset(
-  //     'assets/images/whatsapp.jpeg',
-  //     width: 40,
-  //     height: 40,
-  //   ),
-  // ),
 
   Future<void> pickImage(ImageSource source) async {
     final XFile? image = await picker.pickImage(source: source);
@@ -473,26 +463,38 @@ class DetailsScreenState extends State<DetailsScreen> {
       CommonClass.showLoader(context);
       final api = ApiService();
 
-      var response = await api.postApi(
-        endpoint: ApiConstants.submit + "/json",
-        param: {
-          "user_id": widget.loginData.userId,
-          "sent_date": currentDate.isNotEmpty ? currentDate : DateFormat('dd/MM/yyyy').format(DateTime.now()),
-          "user_name": widget.loginData.userName,
-          "mobile_no": widget.loginData.mobile,
-          "email": emailController.text.isNotEmpty ? emailController.text : widget.loginData.email,
-          "branch": widget.loginData.branch,
-          "department": (isSame.value) ? widget.loginData.department : (selectDepartment.value ?? widget.loginData.department),
-          "sub_department": selectSubDepartment.value ?? '',
-          "city": widget.loginData.city,
-          "company": widget.loginData.company,
-          "reporting_manager": widget.loginData.reporting_man,
-          "engineer_name": selectEngName.value ?? '',
-          "query_text": selectQuery.value ?? '',
-          "remarks": remarksController.text,
-          "status": "Pending",
-          "w_type": "",
-        },
+      Map<String, dynamic> map = {
+        "user_id": widget.loginData.userId.isNotEmpty ? widget.loginData.userId : "1",
+        "sent_date": currentDate.isNotEmpty ? currentDate : DateFormat('dd/MM/yyyy').format(DateTime.now()),
+        "user_name": widget.loginData.userName,
+        "mobile_no": widget.loginData.mobile,
+        "email": emailController.text.isNotEmpty ? emailController.text : widget.loginData.email,
+        "branch": widget.loginData.branch,
+        "department": (isSame.value) ? widget.loginData.department : (selectDepartment.value ?? widget.loginData.department),
+        "sub_department": selectSubDepartment.value ?? '',
+        "city": widget.loginData.city,
+        "company": widget.loginData.company,
+        "reporting_manager": widget.loginData.reporting_man,
+        "engineer_name": selectEngName.value ?? '',
+        "query_text": selectQuery.value ?? '',
+        "remarks": remarksController.text,
+        "status": "Pending",
+        "w_type": "",
+      };
+
+      if (selectedImage.value != null && await selectedImage.value!.exists()) {
+        String fileName = selectedImage.value!.path.split(RegExp(r'[/\\]')).last;
+        map["file"] = await MultipartFile.fromFile(
+          selectedImage.value!.path,
+          filename: fileName,
+        );
+      }
+
+      FormData formData = FormData.fromMap(map);
+
+      var response = await api.postFormDataApi(
+        endpoint: ApiConstants.submit,
+        formData: formData,
       );
 
       CommonClass.hideLoader(context);
@@ -500,17 +502,18 @@ class DetailsScreenState extends State<DetailsScreen> {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('Success Response==>${response.data}');
-
-        CommonClass.showSnackBar(context, message: "Submit Successfully", textColor: Colors.deepPurple);
-        Future.delayed(Duration(seconds: 2), () {
-          CommonClass.navClass(context, WelcomeScreen());
+        CommonClass().setFName(selectEngName.value ?? "");
+        CommonClass.showSnackBar(context, message: "Query Submitted Successfully", textColor: Colors.deepPurple);
+        Future.delayed(const Duration(seconds: 1), () {
+          CommonClass.navClass(context, QueryListScreen(userId: widget.loginData.userId.isNotEmpty ? widget.loginData.userId : '1'));
         });
-      }  else {
+      } else {
         CommonClass.showSnackBar(context, message: "Submit Failed");
       }
     } catch (e) {
       CommonClass.hideLoader(context);
       print("Error: $e");
+      CommonClass.showSnackBar(context, message: "Error submitting query: $e");
     }
   }
 

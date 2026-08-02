@@ -42,10 +42,10 @@ app.include_router(meta.router, prefix=settings.API_V1_STR)
 
 @app.on_event("startup")
 def seed_default_data():
-    """Seed initial sample data and accounts if DB is fresh"""
+    """Seed initial sample data and accounts safely across workers"""
     db = SessionLocal()
     try:
-        if db.query(UserModel).count() == 0:
+        if db.query(UserModel.id).first() is None:
             user = UserModel(
                 username="emilys",
                 password_hash=get_password_hash("emilyspass"),
@@ -108,8 +108,13 @@ def seed_default_data():
                 designation="ICT Senior Executive"
             )
             db.add_all([user, manager, admin, ict1, ict2])
+            db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"User seeding skipped or handled by peer worker: {e}")
 
-        if db.query(QueryModel).count() == 0:
+    try:
+        if db.query(QueryModel.id).first() is None:
             sample_query1 = QueryModel(
                 user_id="1",
                 sent_date="20/06/2026",
@@ -143,11 +148,10 @@ def seed_default_data():
                 status="Completed"
             )
             db.add_all([sample_query1, sample_query2])
-
-        db.commit()
+            db.commit()
     except Exception as e:
         db.rollback()
-        print(f"Data seeding skipped or handled by peer worker: {e}")
+        print(f"Query seeding skipped or handled by peer worker: {e}")
     finally:
         db.close()
 

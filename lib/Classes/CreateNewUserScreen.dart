@@ -522,7 +522,10 @@ class CreateNewUserScreenState extends State<CreateNewUserScreen> {
         String msg = response.data is Map && response.data['detail'] != null 
             ? response.data['detail'] 
             : "Failed to create user";
-        CommonClass.showSnackBar(context, message: msg, backgroundColor: Colors.red);
+        if (msg.contains("Username already exists")) {
+          msg = "Badge ID / User Name already exists. Please login using this Badge ID.";
+        }
+        CommonClass.showSnackBar(context, message: msg, backgroundColor: Colors.red, textColor: Colors.white);
       }
     } catch (e) {
       CommonClass.hideLoader(context);

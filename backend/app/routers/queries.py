@@ -27,9 +27,9 @@ async def create_query(
     city: Optional[str] = Form(None),
     company: Optional[str] = Form(None),
     reporting_manager: Optional[str] = Form(None),
-    query_text: str = Form(...),
+    query_text: Optional[str] = Form(""),
     remarks: Optional[str] = Form(None),
-    status_val: Optional[str] = Form("Pending"),
+    status_val: Optional[str] = Form("Pending", alias="status"),
     w_type: Optional[str] = Form(""),
     file: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db)
