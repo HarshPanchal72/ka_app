@@ -399,8 +399,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
       Response response = await api.postApi(
         endpoint: ApiConstants.login,
         param: {
-          "username": username,
-          "password": pswd,
+          "username": username.trim(),
+          "password": pswd.trim(),
         },
       );
 

@@ -11,9 +11,10 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 @router.post("/login")
 def login(login_data: UserLogin, db: Session = Depends(get_db)):
     clean_username = login_data.username.strip()
+    clean_password = login_data.password.strip()
     user = db.query(UserModel).filter(func.lower(UserModel.username) == func.lower(clean_username)).first()
     
-    if not user or not verify_password(login_data.password, user.password_hash):
+    if not user or not verify_password(clean_password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid Badge ID or Password",

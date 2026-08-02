@@ -48,7 +48,7 @@ async def create_user(
 
     user = UserModel(
         username=clean_username,
-        password_hash=get_password_hash(password),
+        password_hash=get_password_hash(password.strip()),
         role=role or "User",
         mobile=mobile,
         email=email,
@@ -196,10 +196,13 @@ def change_user_password(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    if not verify_password(data.old_password, user.password_hash):
+    clean_old_pswd = data.old_password.strip()
+    clean_new_pswd = data.new_password.strip()
+
+    if not verify_password(clean_old_pswd, user.password_hash):
         raise HTTPException(status_code=400, detail="Old password is incorrect")
 
-    user.password_hash = get_password_hash(data.new_password)
+    user.password_hash = get_password_hash(clean_new_pswd)
     db.commit()
     return {"message": "Password changed successfully"}
 
