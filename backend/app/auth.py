@@ -8,16 +8,50 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
 
+import hashlib
+import hmac
+import os
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login", auto_error=False)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    safe_password = plain_password[:72] if plain_password else ""
-    return pwd_context.verify(safe_password, hashed_password)
+    if not plain_password or not hashed_password:
+        return False
+    pwd = plain_password.strip()[:72]
+
+    # Direct match check for legacy/plain passwords
+    if pwd == hashed_password:
+        return True
+
+    if hashed_password.startswith("sha256$"):
+        try:
+            parts = hashed_password.split("$")
+            if len(parts) == 3:
+                salt, expected_hash = parts[1], parts[2]
+                computed = hashlib.sha256((salt + pwd).encode("utf-8")).hexdigest()
+                return hmac.compare_digest(computed, expected_hash)
+        except Exception:
+            return False
+
+    try:
+        return pwd_context.verify(pwd, hashed_password)
+    except Exception as e:
+        print(f"Bcrypt verify error: {e}")
+        # Fallback SHA256 check
+        salt = "kataria_salt"
+        computed = hashlib.sha256((salt + pwd).encode("utf-8")).hexdigest()
+        return computed in hashed_password
 
 def get_password_hash(password: str) -> str:
-    safe_password = password[:72] if password else ""
-    return pwd_context.hash(safe_password)
+    pwd = (password or "").strip()[:72]
+    try:
+        return pwd_context.hash(pwd)
+    except Exception as e:
+        print(f"Bcrypt hashing error: {e}")
+        salt = os.urandom(16).hex()
+        hashed = hashlib.sha256((salt + pwd).encode("utf-8")).hexdigest()
+        return f"sha256${salt}${hashed}"
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
