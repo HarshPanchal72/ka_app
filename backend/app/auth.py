@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
 
+import bcrypt
 import hashlib
 import hmac
 import os
@@ -18,40 +19,61 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     if not plain_password or not hashed_password:
         return False
-    pwd = plain_password.strip()[:72]
+    pwd_str = plain_password.strip()[:72]
+    pwd_bytes = pwd_str.encode("utf-8")
+    hashed_str = hashed_password.strip()
 
-    # Direct match check for legacy/plain passwords
-    if pwd == hashed_password:
+    # 1. Plaintext match for sample/default accounts
+    if pwd_str == hashed_str:
         return True
 
-    if hashed_password.startswith("sha256$"):
+    # 2. SHA256 fallback format
+    if hashed_str.startswith("sha256$"):
         try:
-            parts = hashed_password.split("$")
+            parts = hashed_str.split("$")
             if len(parts) == 3:
                 salt, expected_hash = parts[1], parts[2]
-                computed = hashlib.sha256((salt + pwd).encode("utf-8")).hexdigest()
+                computed = hashlib.sha256((salt + pwd_str).encode("utf-8")).hexdigest()
                 return hmac.compare_digest(computed, expected_hash)
         except Exception:
-            return False
+            pass
 
+    # 3. Direct bcrypt check (works reliably in Python 3.14 without passlib bug)
+    if hashed_str.startswith("$2b$") or hashed_str.startswith("$2a$") or hashed_str.startswith("$2y$"):
+        try:
+            return bcrypt.checkpw(pwd_bytes, hashed_str.encode("utf-8"))
+        except Exception as b_err:
+            print(f"Direct bcrypt checkpw error: {b_err}")
+
+    # 4. Passlib check fallback
     try:
-        return pwd_context.verify(pwd, hashed_password)
-    except Exception as e:
-        print(f"Bcrypt verify error: {e}")
-        # Fallback SHA256 check
-        salt = "kataria_salt"
-        computed = hashlib.sha256((salt + pwd).encode("utf-8")).hexdigest()
-        return computed in hashed_password
+        return pwd_context.verify(pwd_str, hashed_str)
+    except Exception as p_err:
+        print(f"Passlib verify error: {p_err}")
+
+    return False
 
 def get_password_hash(password: str) -> str:
-    pwd = (password or "").strip()[:72]
+    pwd_str = (password or "").strip()[:72]
+    pwd_bytes = pwd_str.encode("utf-8")
+    
+    # 1. Try direct bcrypt first
     try:
-        return pwd_context.hash(pwd)
-    except Exception as e:
-        print(f"Bcrypt hashing error: {e}")
-        salt = os.urandom(16).hex()
-        hashed = hashlib.sha256((salt + pwd).encode("utf-8")).hexdigest()
-        return f"sha256${salt}${hashed}"
+        salt = bcrypt.gensalt()
+        return bcrypt.hashpw(pwd_bytes, salt).decode("utf-8")
+    except Exception as b_err:
+        print(f"Direct bcrypt hashpw error: {b_err}")
+
+    # 2. Try passlib
+    try:
+        return pwd_context.hash(pwd_str)
+    except Exception as p_err:
+        print(f"Passlib hash error: {p_err}")
+
+    # 3. Fail-safe SHA256
+    salt = os.urandom(16).hex()
+    hashed = hashlib.sha256((salt + pwd_str).encode("utf-8")).hexdigest()
+    return f"sha256${salt}${hashed}"
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:

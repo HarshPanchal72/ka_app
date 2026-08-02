@@ -14,10 +14,18 @@ def login(login_data: UserLogin, db: Session = Depends(get_db)):
     clean_password = login_data.password.strip()
     user = db.query(UserModel).filter(func.lower(UserModel.username) == func.lower(clean_username)).first()
     
-    if not user or not verify_password(clean_password, user.password_hash):
+    if not user:
+        print(f"[LOGIN FAIL] User '{clean_username}' not found in database.")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Badge ID or Password",
+            detail=f"Badge ID / User '{clean_username}' not registered. Please create an account first.",
+        )
+
+    if not verify_password(clean_password, user.password_hash):
+        print(f"[LOGIN FAIL] Password mismatch for user '{clean_username}'.")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect Password. Please check your password.",
         )
 
     access_token = create_access_token(data={"sub": user.username, "role": user.role})
