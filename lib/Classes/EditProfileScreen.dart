@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:ka_app/Classes/SideMenu.dart';
 import 'package:ka_app/Models/LoginPassModel.dart';
@@ -108,18 +109,86 @@ class EditProfileScreenState extends State<EditProfileScreen> {
       setState(() {});
     });
 
-    userNameController.text = "Teena Shah";
-    mobNoController.text = "9876543211";
-    emailController.text = "teena@gmail.com";
-    orgController.text = "kamk1234";
+    loadUserData();
+  }
 
-    selectCity.value = "Ahmedabad";
-    arrBranch.value = branchMap.value[selectCity.value] ?? [];
-    selectBranch.value = "Ahmedabad-Makarba";
-    selectDepartment.value = "ERP";
-    arrDesignations.value = designationMap.value[selectDepartment.value] ?? [];
-    selectDesignation.value = "Manager ERP";
+  Future<void> loadUserData() async {
+    Map<String, String> data = await CommonClass().getUserData();
+    userNameController.text = data["username"] ?? "";
+    mobNoController.text = data["mobile"] ?? "";
+    emailController.text = data["email"] ?? "";
+    orgController.text = data["company"] ?? "KAPL";
 
+    String city = data["city"] ?? "";
+    if (city.isNotEmpty && arrCity.value.contains(city)) {
+      selectCity.value = city;
+      arrBranch.value = branchMap.value[city] ?? [];
+    } else if (arrCity.value.isNotEmpty) {
+      selectCity.value = arrCity.value.first;
+      arrBranch.value = branchMap.value[selectCity.value] ?? [];
+    }
+
+    String branch = data["branch"] ?? "";
+    if (branch.isNotEmpty && arrBranch.value.contains(branch)) {
+      selectBranch.value = branch;
+    }
+
+    String dept = data["department"] ?? "";
+    if (dept.isNotEmpty && arrDepartments.value.contains(dept)) {
+      selectDepartment.value = dept;
+      arrDesignations.value = designationMap.value[dept] ?? [];
+    } else if (arrDepartments.value.isNotEmpty) {
+      selectDepartment.value = arrDepartments.value.first;
+      arrDesignations.value = designationMap.value[selectDepartment.value] ?? [];
+    }
+
+    String desig = data["designation"] ?? "";
+    if (desig.isNotEmpty && arrDesignations.value.contains(desig)) {
+      selectDesignation.value = desig;
+    }
+  }
+
+  Future<void> callUpdateProfileApi() async {
+    try {
+      CommonClass.showLoader(context);
+      final api = ApiService();
+
+      Map<String, dynamic> formMap = {
+        "username": userNameController.text.trim(),
+        "mobile": mobNoController.text.trim(),
+        "email": emailController.text.trim(),
+        "company": orgController.text.trim(),
+        "branch": selectBranch.value ?? '',
+        "city": selectCity.value ?? '',
+        "department": selectDepartment.value ?? '',
+        "designation": selectDesignation.value ?? '',
+      };
+
+      FormData formData = FormData.fromMap(formMap);
+
+      final response = await api.postFormDataApi(
+        endpoint: "${ApiConstants.baseUrl}/users/update",
+        formData: formData,
+      );
+
+      CommonClass.hideLoader(context);
+      if (response.statusCode == 200) {
+        if (response.data is Map) {
+          Map<String, dynamic> userMap = Map<String, dynamic>.from(response.data);
+          await CommonClass().setUserData(userMap);
+        }
+        CommonClass.showSnackBar(context, message: "Profile Updated Successfully", textColor: Colors.deepPurple);
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pop(context);
+        });
+      } else {
+        CommonClass.showSnackBar(context, message: "Failed to update profile", backgroundColor: Colors.red);
+      }
+    } catch (e) {
+      CommonClass.hideLoader(context);
+      CommonClass.showSnackBar(context, message: "Error updating profile", backgroundColor: Colors.red);
+      print("Update Profile Error: $e");
+    }
   }
 
   @override
@@ -394,16 +463,11 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                   SizedBox(height: 22),
 
                   CommonClass().commonButton(
-                      text: "Edit",
+                      text: "Save Profile Changes",
                       width: screenWidth,
                       onPressed: () {
                         if (formKey.currentState!.validate()) {
-                          CommonClass.showLoader(context);
-                          CommonClass.showSnackBar(context, message: "Edit Profile Successfully", textColor: Colors.deepPurple);
-                          Future.delayed(const Duration(seconds: 2), () {
-                            CommonClass.hideLoader(context);
-                            Navigator.pop(context);
-                          });
+                          callUpdateProfileApi();
                         }
                       }
                   ),

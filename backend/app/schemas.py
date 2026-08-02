@@ -42,6 +42,7 @@ class UserUpdate(BaseModel):
     designation: Optional[str] = None
 
 class ChangePassword(BaseModel):
+    username: Optional[str] = None
     old_password: str
     new_password: str
 

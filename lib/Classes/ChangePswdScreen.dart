@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../API Manager/APIConstants.dart';
+import '../API Manager/APIService.dart';
 import '../Resources/AppColors.dart';
 import '../Resources/AppText.dart';
 import 'SideMenu.dart';
@@ -41,6 +43,43 @@ class _ChangePasswordScreenState extends State<ChangePswdScreen> {
       setState(() {});
     });
 
+  }
+
+  Future<void> callChangePasswordApi() async {
+    try {
+      CommonClass.showLoader(context);
+      Map<String, String> userData = await CommonClass().getUserData();
+      String username = userData["username"] ?? "";
+
+      final api = ApiService();
+      Map<String, dynamic> body = {
+        "username": username,
+        "old_password": oldPasswordController.text.trim(),
+        "new_password": newPasswordController.text.trim(),
+      };
+
+      final response = await api.postApi(
+        endpoint: "${ApiConstants.baseUrl}/users/change-password",
+        param: body,
+      );
+
+      CommonClass.hideLoader(context);
+      if (response.statusCode == 200) {
+        CommonClass.showSnackBar(context, message: "Password Changed Successfully", textColor: Colors.deepPurple);
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pop(context);
+        });
+      } else {
+        String msg = response.data is Map && response.data['detail'] != null
+            ? response.data['detail']
+            : "Failed to change password";
+        CommonClass.showSnackBar(context, message: msg, backgroundColor: Colors.red);
+      }
+    } catch (e) {
+      CommonClass.hideLoader(context);
+      CommonClass.showSnackBar(context, message: "Error changing password", backgroundColor: Colors.red);
+      print("Change Password Error: $e");
+    }
   }
 
   @override
@@ -171,7 +210,7 @@ class _ChangePasswordScreenState extends State<ChangePswdScreen> {
                 width: screenWidth,
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    CommonClass.showSnackBar(context, message: "Change Password Successfully");
+                    callChangePasswordApi();
                   }
                 },
               ),
