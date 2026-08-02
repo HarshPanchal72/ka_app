@@ -104,11 +104,20 @@ def list_users(db: Session = Depends(get_db)):
 @router.get("/by-username/{username}", response_model=UserResponse)
 def get_user_by_username(username: str, db: Session = Depends(get_db)):
     clean_name = username.strip()
-    user = db.query(UserModel).filter(
-        (func.lower(UserModel.username) == func.lower(clean_name)) |
-        (func.lower(UserModel.badge_id) == func.lower(clean_name)) |
-        (func.lower(UserModel.company) == func.lower(clean_name))
-    ).first()
+    user = None
+    try:
+        user = db.query(UserModel).filter(
+            (func.lower(UserModel.username) == func.lower(clean_name)) |
+            (func.lower(UserModel.badge_id) == func.lower(clean_name)) |
+            (func.lower(UserModel.company) == func.lower(clean_name))
+        ).first()
+    except Exception as e:
+        db.rollback()
+        user = db.query(UserModel).filter(
+            (func.lower(UserModel.username) == func.lower(clean_name)) |
+            (func.lower(UserModel.company) == func.lower(clean_name))
+        ).first()
+
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
@@ -139,11 +148,20 @@ async def update_user_profile(
     if not target_name:
         raise HTTPException(status_code=400, detail="Username or Badge ID is required for update")
     
-    user = db.query(UserModel).filter(
-        (func.lower(UserModel.username) == func.lower(target_name)) |
-        (func.lower(UserModel.badge_id) == func.lower(target_name)) |
-        (func.lower(UserModel.company) == func.lower(target_name))
-    ).first()
+    user = None
+    try:
+        user = db.query(UserModel).filter(
+            (func.lower(UserModel.username) == func.lower(target_name)) |
+            (func.lower(UserModel.badge_id) == func.lower(target_name)) |
+            (func.lower(UserModel.company) == func.lower(target_name))
+        ).first()
+    except Exception:
+        db.rollback()
+        user = db.query(UserModel).filter(
+            (func.lower(UserModel.username) == func.lower(target_name)) |
+            (func.lower(UserModel.company) == func.lower(target_name))
+        ).first()
+
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 

@@ -12,13 +12,24 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 def login(login_data: UserLogin, db: Session = Depends(get_db)):
     clean_username = login_data.username.strip()
     clean_password = login_data.password.strip()
-    user = db.query(UserModel).filter(
-        (func.lower(UserModel.username) == func.lower(clean_username)) |
-        (func.lower(UserModel.badge_id) == func.lower(clean_username)) |
-        (func.lower(UserModel.company) == func.lower(clean_username)) |
-        (func.lower(UserModel.email) == func.lower(clean_username)) |
-        (UserModel.mobile == clean_username)
-    ).first()
+    user = None
+    try:
+        user = db.query(UserModel).filter(
+            (func.lower(UserModel.username) == func.lower(clean_username)) |
+            (func.lower(UserModel.badge_id) == func.lower(clean_username)) |
+            (func.lower(UserModel.company) == func.lower(clean_username)) |
+            (func.lower(UserModel.email) == func.lower(clean_username)) |
+            (UserModel.mobile == clean_username)
+        ).first()
+    except Exception as q_err:
+        db.rollback()
+        print(f"Login query fallback: {q_err}")
+        user = db.query(UserModel).filter(
+            (func.lower(UserModel.username) == func.lower(clean_username)) |
+            (func.lower(UserModel.company) == func.lower(clean_username)) |
+            (func.lower(UserModel.email) == func.lower(clean_username)) |
+            (UserModel.mobile == clean_username)
+        ).first()
     
     if not user:
         print(f"[LOGIN FAIL] User/Badge ID '{clean_username}' not found in database.")

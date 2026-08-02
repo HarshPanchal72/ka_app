@@ -45,6 +45,18 @@ def seed_default_data():
     """Seed initial sample data and accounts safely across workers without failing startup"""
     try:
         db = SessionLocal()
+        # Auto-migrate missing columns for existing database tables
+        try:
+            from sqlalchemy import text
+            db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS badge_id VARCHAR;"))
+            db.commit()
+        except Exception as col_err:
+            try:
+                db.rollback()
+            except Exception:
+                pass
+            print(f"Auto-migration info: {col_err}")
+
         try:
             if db.query(UserModel.id).first() is None:
                 user = UserModel(
