@@ -55,6 +55,7 @@ class CommonClass {
   Future<void> setUserData(Map<String, dynamic> userMap) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString("user", userMap["username"] ?? "");
+    await prefs.setString("user_badge_id", userMap["badge_id"] ?? userMap["company"] ?? userMap["username"] ?? "");
     await prefs.setString("user_email", userMap["email"] ?? "");
     await prefs.setString("user_mobile", userMap["mobile"] ?? "");
     await prefs.setString("user_company", userMap["company"] ?? "");
@@ -71,6 +72,7 @@ class CommonClass {
     final prefs = await SharedPreferences.getInstance();
     return {
       "username": prefs.getString("user") ?? "",
+      "badge_id": prefs.getString("user_badge_id") ?? "",
       "email": prefs.getString("user_email") ?? "",
       "mobile": prefs.getString("user_mobile") ?? "",
       "company": prefs.getString("user_company") ?? "",

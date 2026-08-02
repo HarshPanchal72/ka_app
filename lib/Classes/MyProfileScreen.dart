@@ -74,6 +74,14 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     String company = userData["company"] ?? "";
     String profilePicture = userData["profile_picture"] ?? "";
 
+    String badgeId = userData["badge_id"] ?? "";
+    if (badgeId.isEmpty) {
+      badgeId = userData["company"] ?? "";
+    }
+    if (badgeId.isEmpty) {
+      badgeId = username;
+    }
+
     return Scaffold(
       drawer: const SideMenu(),
       appBar: CommonClass().commonAppBar(title: "My Profile", toolbarHeight: 50),
@@ -108,7 +116,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                   profileTile(
                     Icons.badge,
                     "Badge ID",
-                    username.isNotEmpty ? username : "N/A",
+                    badgeId.isNotEmpty ? badgeId : "N/A",
                   ),
 
                   profileTile(

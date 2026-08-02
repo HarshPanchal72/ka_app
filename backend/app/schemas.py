@@ -21,6 +21,7 @@ class UserLogin(BaseModel):
 
 class UserRegister(BaseModel):
     username: str
+    badge_id: Optional[str] = None
     password: str
     role: Optional[str] = "User"
     mobile: Optional[str] = None
@@ -33,6 +34,7 @@ class UserRegister(BaseModel):
     reporting_manager: Optional[str] = None
 
 class UserUpdate(BaseModel):
+    badge_id: Optional[str] = None
     mobile: Optional[str] = None
     email: Optional[str] = None
     company: Optional[str] = None
@@ -49,6 +51,7 @@ class ChangePassword(BaseModel):
 class UserResponse(BaseModel):
     id: int
     username: str
+    badge_id: Optional[str] = None
     role: str
     mobile: Optional[str] = None
     email: Optional[str] = None

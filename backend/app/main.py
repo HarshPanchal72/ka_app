@@ -49,6 +49,7 @@ def seed_default_data():
             if db.query(UserModel.id).first() is None:
                 user = UserModel(
                     username="emilys",
+                    badge_id="emilys",
                     password_hash=get_password_hash("emilyspass"),
                     role="User",
                     email="emilys@kataria.co.in",
@@ -62,6 +63,7 @@ def seed_default_data():
                 )
                 manager = UserModel(
                     username="manager",
+                    badge_id="manager",
                     password_hash=get_password_hash("manager123"),
                     role="Manager",
                     email="manager@kataria.co.in",
@@ -74,6 +76,7 @@ def seed_default_data():
                 )
                 admin = UserModel(
                     username="admin",
+                    badge_id="admin",
                     password_hash=get_password_hash("admin123"),
                     role="Acc",
                     email="admin@kataria.co.in",
@@ -86,6 +89,7 @@ def seed_default_data():
                 )
                 ict1 = UserModel(
                     username="ict1",
+                    badge_id="ict1",
                     password_hash=get_password_hash("ict1pass"),
                     role="User",
                     email="ict1@kataria.co.in",
@@ -98,6 +102,7 @@ def seed_default_data():
                 )
                 ict2 = UserModel(
                     username="ict2",
+                    badge_id="ict2",
                     password_hash=get_password_hash("ict2pass"),
                     role="User",
                     email="ict2@kataria.co.in",

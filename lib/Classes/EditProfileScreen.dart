@@ -117,7 +117,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
     userNameController.text = data["username"] ?? "";
     mobNoController.text = data["mobile"] ?? "";
     emailController.text = data["email"] ?? "";
-    orgController.text = data["company"] ?? "KAPL";
+    orgController.text = (data["badge_id"]?.isNotEmpty == true) ? data["badge_id"]! : (data["username"] ?? "");
 
     String city = data["city"] ?? "";
     if (city.isNotEmpty && arrCity.value.contains(city)) {
@@ -155,9 +155,10 @@ class EditProfileScreenState extends State<EditProfileScreen> {
 
       Map<String, dynamic> formMap = {
         "username": userNameController.text.trim(),
+        "badge_id": orgController.text.trim(),
         "mobile": mobNoController.text.trim(),
         "email": emailController.text.trim(),
-        "company": orgController.text.trim(),
+        "company": "KAPL",
         "branch": selectBranch.value ?? '',
         "city": selectCity.value ?? '',
         "department": selectDepartment.value ?? '',

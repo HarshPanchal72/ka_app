@@ -19,6 +19,7 @@ async def create_user(
     username: str = Form(...),
     password: str = Form(...),
     role: Optional[str] = Form("User"),
+    badge_id: Optional[str] = Form(None),
     mobile: Optional[str] = Form(None),
     email: Optional[str] = Form(None),
     company: Optional[str] = Form(None),
@@ -31,9 +32,14 @@ async def create_user(
     db: Session = Depends(get_db)
 ):
     clean_username = username.strip()
-    existing = db.query(UserModel).filter(func.lower(UserModel.username) == func.lower(clean_username)).first()
+    clean_badge = (badge_id or company or clean_username).strip()
+
+    existing = db.query(UserModel).filter(
+        (func.lower(UserModel.username) == func.lower(clean_username)) |
+        (func.lower(UserModel.badge_id) == func.lower(clean_badge))
+    ).first()
     if existing:
-        raise HTTPException(status_code=400, detail="Username already exists")
+        raise HTTPException(status_code=400, detail="Username or Badge ID already exists")
 
     profile_path = None
     if file and file.filename:
@@ -48,11 +54,12 @@ async def create_user(
 
     user = UserModel(
         username=clean_username,
+        badge_id=clean_badge,
         password_hash=get_password_hash(password.strip()),
         role=role or "User",
         mobile=mobile,
         email=email,
-        company=company,
+        company=company or clean_badge,
         branch=branch,
         city=city,
         department=department,
@@ -96,7 +103,12 @@ def list_users(db: Session = Depends(get_db)):
 
 @router.get("/by-username/{username}", response_model=UserResponse)
 def get_user_by_username(username: str, db: Session = Depends(get_db)):
-    user = db.query(UserModel).filter(func.lower(UserModel.username) == func.lower(username.strip())).first()
+    clean_name = username.strip()
+    user = db.query(UserModel).filter(
+        (func.lower(UserModel.username) == func.lower(clean_name)) |
+        (func.lower(UserModel.badge_id) == func.lower(clean_name)) |
+        (func.lower(UserModel.company) == func.lower(clean_name))
+    ).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
@@ -111,6 +123,7 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 @router.post("/update", response_model=UserResponse)
 async def update_user_profile(
     username: Optional[str] = Form(None),
+    badge_id: Optional[str] = Form(None),
     mobile: Optional[str] = Form(None),
     email: Optional[str] = Form(None),
     company: Optional[str] = Form(None),
@@ -122,14 +135,19 @@ async def update_user_profile(
     file: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db)
 ):
-    target_name = (username or "").strip()
+    target_name = (username or badge_id or "").strip()
     if not target_name:
-        raise HTTPException(status_code=400, detail="Username is required for update")
+        raise HTTPException(status_code=400, detail="Username or Badge ID is required for update")
     
-    user = db.query(UserModel).filter(func.lower(UserModel.username) == func.lower(target_name)).first()
+    user = db.query(UserModel).filter(
+        (func.lower(UserModel.username) == func.lower(target_name)) |
+        (func.lower(UserModel.badge_id) == func.lower(target_name)) |
+        (func.lower(UserModel.company) == func.lower(target_name))
+    ).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    if badge_id is not None: user.badge_id = badge_id
     if mobile is not None: user.mobile = mobile
     if email is not None: user.email = email
     if company is not None: user.company = company

@@ -12,10 +12,16 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 def login(login_data: UserLogin, db: Session = Depends(get_db)):
     clean_username = login_data.username.strip()
     clean_password = login_data.password.strip()
-    user = db.query(UserModel).filter(func.lower(UserModel.username) == func.lower(clean_username)).first()
+    user = db.query(UserModel).filter(
+        (func.lower(UserModel.username) == func.lower(clean_username)) |
+        (func.lower(UserModel.badge_id) == func.lower(clean_username)) |
+        (func.lower(UserModel.company) == func.lower(clean_username)) |
+        (func.lower(UserModel.email) == func.lower(clean_username)) |
+        (UserModel.mobile == clean_username)
+    ).first()
     
     if not user:
-        print(f"[LOGIN FAIL] User '{clean_username}' not found in database.")
+        print(f"[LOGIN FAIL] User/Badge ID '{clean_username}' not found in database.")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Badge ID / User '{clean_username}' not registered. Please create an account first.",
@@ -29,15 +35,18 @@ def login(login_data: UserLogin, db: Session = Depends(get_db)):
         )
 
     access_token = create_access_token(data={"sub": user.username, "role": user.role})
+    effective_badge = user.badge_id or user.company or user.username
     
     return {
         "access_token": access_token,
         "token_type": "bearer",
         "role": user.role,
         "username": user.username,
+        "badge_id": effective_badge,
         "user": {
             "id": user.id,
             "username": user.username,
+            "badge_id": effective_badge,
             "role": user.role,
             "mobile": user.mobile or "",
             "email": user.email or "",

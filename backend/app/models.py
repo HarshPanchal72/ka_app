@@ -8,6 +8,7 @@ class UserModel(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     username = Column(String, unique=True, index=True, nullable=False)
+    badge_id = Column(String, nullable=True, index=True)
     password_hash = Column(String, nullable=False)
     role = Column(String, default="User")  # User, Manager, Acc
     mobile = Column(String, nullable=True)
