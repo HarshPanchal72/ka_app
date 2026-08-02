@@ -109,7 +109,6 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
     return user
 
 @router.post("/update", response_model=UserResponse)
-@router.put("/by-username/{username}", response_model=UserResponse)
 async def update_user_profile(
     username: Optional[str] = Form(None),
     mobile: Optional[str] = Form(None),
@@ -153,6 +152,34 @@ async def update_user_profile(
     db.commit()
     db.refresh(user)
     return user
+
+@router.put("/by-username/{username}", response_model=UserResponse)
+async def update_user_profile_by_username(
+    username: str,
+    mobile: Optional[str] = Form(None),
+    email: Optional[str] = Form(None),
+    company: Optional[str] = Form(None),
+    branch: Optional[str] = Form(None),
+    city: Optional[str] = Form(None),
+    department: Optional[str] = Form(None),
+    designation: Optional[str] = Form(None),
+    reporting_manager: Optional[str] = Form(None),
+    file: Optional[UploadFile] = File(None),
+    db: Session = Depends(get_db)
+):
+    return await update_user_profile(
+        username=username,
+        mobile=mobile,
+        email=email,
+        company=company,
+        branch=branch,
+        city=city,
+        department=department,
+        designation=designation,
+        reporting_manager=reporting_manager,
+        file=file,
+        db=db
+    )
 
 @router.post("/change-password")
 def change_user_password(
