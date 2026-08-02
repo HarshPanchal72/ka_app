@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 from app.database import get_db
 from app.models import UserModel
 from app.schemas import UserLogin, Token, UserResponse, ChangePassword
@@ -9,7 +10,8 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/login")
 def login(login_data: UserLogin, db: Session = Depends(get_db)):
-    user = db.query(UserModel).filter(UserModel.username == login_data.username).first()
+    clean_username = login_data.username.strip()
+    user = db.query(UserModel).filter(func.lower(UserModel.username) == func.lower(clean_username)).first()
     
     if not user or not verify_password(login_data.password, user.password_hash):
         raise HTTPException(
@@ -28,15 +30,15 @@ def login(login_data: UserLogin, db: Session = Depends(get_db)):
             "id": user.id,
             "username": user.username,
             "role": user.role,
-            "mobile": user.mobile,
-            "email": user.email,
-            "company": user.company,
-            "branch": user.branch,
-            "city": user.city,
-            "department": user.department,
-            "designation": user.designation,
-            "reporting_manager": user.reporting_manager,
-            "profile_picture": user.profile_picture,
+            "mobile": user.mobile or "",
+            "email": user.email or "",
+            "company": user.company or "",
+            "branch": user.branch or "",
+            "city": user.city or "",
+            "department": user.department or "",
+            "designation": user.designation or "",
+            "reporting_manager": user.reporting_manager or "",
+            "profile_picture": user.profile_picture or "",
         }
     }
 

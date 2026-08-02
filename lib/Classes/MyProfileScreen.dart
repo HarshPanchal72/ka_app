@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../API Manager/APIConstants.dart';
+import '../API Manager/APIService.dart';
 import '../Resources/AppText.dart';
 import '../Resources/SizeConfig.dart';
 import 'SideMenu.dart';
@@ -25,9 +27,29 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 
   Future<void> loadProfileData() async {
     userData = await CommonClass().getUserData();
-    setState(() {
-      isLoading = false;
-    });
+    String username = userData["username"] ?? "";
+
+    if (username.isNotEmpty) {
+      try {
+        final api = ApiService();
+        Response res = await api.getApi(
+          endpoint: "${ApiConstants.baseUrl}/users/by-username/$username",
+        );
+        if (res.statusCode == 200 && res.data is Map) {
+          Map<String, dynamic> freshMap = Map<String, dynamic>.from(res.data);
+          await CommonClass().setUserData(freshMap);
+          userData = await CommonClass().getUserData();
+        }
+      } catch (e) {
+        print("Error fetching profile: $e");
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   ImageProvider getProfileImage(String? pictureUrl) {

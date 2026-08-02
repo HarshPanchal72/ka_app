@@ -272,7 +272,10 @@ class CommonClass {
         ),
       ),
       ).toList(),
-      onChanged: !readOnly ? onChanged : null,
+      onChanged: !readOnly ? (val) {
+        dropdownValue.value = val;
+        if (onChanged != null) onChanged(val);
+      } : null,
       buttonStyleData: FormFieldButtonStyleData(
         height: 36,
         width: width ?? double.infinity,
