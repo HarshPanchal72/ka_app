@@ -180,18 +180,45 @@ void initState() {
     setState(() {});
   });
 
-  userNameController.text = "Teena Shah";
-  mobNoController.text = "9876543211";
-  emailController.text = "teena@gmail.com";
-  orgController.text = "kamk1234";
+  loadUserData();
+}
 
-  selectCity.value = "Ahmedabad";
-  arrBranch.value = branchMap.value[selectCity.value] ?? [];
-  selectBranch.value = "Ahmedabad-Makarba";
-  selectDepartment.value = "ERP";
-  arrDesignations.value = designationMap.value[selectDepartment.value] ?? [];
-  selectDesignation.value = "Manager ERP";
+Future<void> loadUserData() async {
+  Map<String, String> data = await CommonClass().getUserData();
+  userNameController.text = data["username"] ?? "";
+  mobNoController.text = data["mobile"] ?? "";
+  emailController.text = data["email"] ?? "";
+  orgController.text = (data["badge_id"]?.isNotEmpty == true)
+      ? data["badge_id"]!
+      : (data["company"]?.isNotEmpty == true ? data["company"]! : data["username"] ?? "");
 
+  String city = data["city"] ?? "";
+  if (city.isNotEmpty && arrCity.value.contains(city)) {
+    selectCity.value = city;
+    arrBranch.value = branchMap.value[city] ?? [];
+  } else if (arrCity.value.isNotEmpty) {
+    selectCity.value = arrCity.value.first;
+    arrBranch.value = branchMap.value[selectCity.value] ?? [];
+  }
+
+  String branch = data["branch"] ?? "";
+  if (branch.isNotEmpty && arrBranch.value.contains(branch)) {
+    selectBranch.value = branch;
+  }
+
+  String dept = data["department"] ?? "";
+  if (dept.isNotEmpty && arrDepartments.value.contains(dept)) {
+    selectDepartment.value = dept;
+    arrDesignations.value = designationMap.value[dept] ?? [];
+  } else if (arrDepartments.value.isNotEmpty) {
+    selectDepartment.value = arrDepartments.value.first;
+    arrDesignations.value = designationMap.value[selectDepartment.value] ?? [];
+  }
+
+  String desig = data["designation"] ?? "";
+  if (desig.isNotEmpty && arrDesignations.value.contains(desig)) {
+    selectDesignation.value = desig;
+  }
 }
   @override
   Widget build(BuildContext context) {
